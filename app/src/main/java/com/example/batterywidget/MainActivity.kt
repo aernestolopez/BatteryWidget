@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity() {
     private val phoneBatteryReceiver = object : BroadcastReceiver() {
         @RequiresApi(Build.VERSION_CODES.N_MR1)
         override fun onReceive(context: Context?, intent: Intent?) {
+
             val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: return
             val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
             val percent = (level * 100) / scale
@@ -91,16 +92,31 @@ class MainActivity : AppCompatActivity() {
             val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                     status == BatteryManager.BATTERY_STATUS_FULL
 
+            val plug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+
+            val chargingType = when (plug) {
+                BatteryManager.BATTERY_PLUGGED_AC -> " (carga rápida)"
+                BatteryManager.BATTERY_PLUGGED_USB -> " (carga normal)"
+                BatteryManager.BATTERY_PLUGGED_WIRELESS -> " (carga inalámbrica)"
+                else -> ""
+            }
+
             val deviceName =
                 Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
 
             phoneBatteryText.text =
                 if (charging)
-                    getString(R.string.phone_battery_charging, deviceName, percent)
+                    getString(
+                        R.string.phone_battery_charging_type,
+                        deviceName,
+                        percent,
+                        chargingType
+                    )
                 else
                     getString(R.string.phone_battery, deviceName, percent)
         }
     }
+
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
