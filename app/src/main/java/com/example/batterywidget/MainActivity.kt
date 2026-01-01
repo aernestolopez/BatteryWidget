@@ -2,16 +2,21 @@ package com.example.batterywidget
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.TextView
-import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -20,6 +25,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var batteryText: TextView
     private lateinit var deviceText: TextView
+    private lateinit var phoneBatteryText: TextView
 
 
     private var connectedDevice: BluetoothDevice? = null
@@ -34,6 +40,8 @@ class MainActivity : AppCompatActivity() {
         "android.bluetooth.device.action.ACL_CONNECTED"
     private val ACTION_ACL_DISCONNECTED =
         "android.bluetooth.device.action.ACL_DISCONNECTED"
+
+
 
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
@@ -83,6 +91,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val phoneBatteryReceiver = object : BroadcastReceiver(){
+        @RequiresApi(Build.VERSION_CODES.N_MR1)
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val level= intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale= intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            val percent = scale?.let { (level?.times(100))?.div(it) }
+
+            val status= intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            val charging = status == BatteryManager.BATTERY_STATUS_CHARGING || status== BatteryManager.BATTERY_STATUS_FULL
+            val deviceName = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
+            phoneBatteryText.text=
+                if(charging)
+                    "Bateria de $deviceName: $percent% (cargando)"
+            else
+                "Bateria de $deviceName: $percent%"
+        }
+    }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
         batteryText = findViewById(R.id.batteryText)
         deviceText = findViewById(R.id.batteryText2)
+        phoneBatteryText = findViewById(R.id.batteryText3)
 
         batteryText.text = "Esperando dispositivo…"
         deviceText.text = ""
@@ -102,6 +129,7 @@ class MainActivity : AppCompatActivity() {
             addAction(ACTION_BATTERY_LEVEL_CHANGED)
         }
         registerReceiver(bluetoothReceiver, filter)
+        registerReceiver(phoneBatteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
 
         detectConnectedHeadset()
@@ -193,6 +221,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         try {
             unregisterReceiver(bluetoothReceiver)
+            unregisterReceiver(phoneBatteryReceiver)
         } catch (_: Exception) {}
     }
 
