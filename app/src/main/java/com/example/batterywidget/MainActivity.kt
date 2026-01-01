@@ -2,10 +2,7 @@ package com.example.batterywidget
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothClass
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothProfile
+import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -27,22 +24,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var deviceText: TextView
     private lateinit var phoneBatteryText: TextView
 
-
     private var connectedDevice: BluetoothDevice? = null
 
-
-    private val ACTION_BATTERY_LEVEL_CHANGED =
-        "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
-    private val EXTRA_BATTERY_LEVEL =
-        "android.bluetooth.device.extra.BATTERY_LEVEL"
-
-    private val ACTION_ACL_CONNECTED =
-        "android.bluetooth.device.action.ACL_CONNECTED"
-    private val ACTION_ACL_DISCONNECTED =
-        "android.bluetooth.device.action.ACL_DISCONNECTED"
-
-
-
+    companion object {
+        const val ACTION_BATTERY_LEVEL_CHANGED =
+            "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+        const val EXTRA_BATTERY_LEVEL =
+            "android.bluetooth.device.extra.BATTERY_LEVEL"
+    }
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
 
@@ -50,40 +39,40 @@ class MainActivity : AppCompatActivity() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onReceive(context: Context?, intent: Intent?) {
 
-            val device =
-                intent?.getParcelableExtra<BluetoothDevice>(
-                    BluetoothDevice.EXTRA_DEVICE
-                )
+            val device: BluetoothDevice? =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent?.getParcelableExtra(
+                        BluetoothDevice.EXTRA_DEVICE,
+                        BluetoothDevice::class.java
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                }
 
             when (intent?.action) {
 
-
-                ACTION_ACL_CONNECTED -> {
+                BluetoothDevice.ACTION_ACL_CONNECTED -> {
                     if (device != null && isHeadset(device)) {
                         connectedDevice = device
                         loadSavedBattery()
                     }
                 }
 
-
                 ACTION_BATTERY_LEVEL_CHANGED -> {
                     val level = intent.getIntExtra(EXTRA_BATTERY_LEVEL, -1)
-                    if (
-                        device != null &&
-                        device == connectedDevice &&
-                        level != -1
-                    ) {
+                    if (device != null && device == connectedDevice && level != -1) {
                         BatteryStorage.save(this@MainActivity, device, level)
-                        batteryText.text = "Batería: $level%"
+                        batteryText.text =
+                            getString(R.string.headset_battery, level)
                         deviceText.text = device.name
                     }
                 }
 
-
-                ACTION_ACL_DISCONNECTED -> {
+                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     if (device != null && device == connectedDevice) {
                         connectedDevice = null
-                        batteryText.text = "Cascos desconectados"
+                        batteryText.text = getString(R.string.headset_disconnected)
                         deviceText.text = ""
                     }
                 }
@@ -91,21 +80,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val phoneBatteryReceiver = object : BroadcastReceiver(){
+    private val phoneBatteryReceiver = object : BroadcastReceiver() {
         @RequiresApi(Build.VERSION_CODES.N_MR1)
         override fun onReceive(context: Context?, intent: Intent?) {
-            val level= intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-            val scale= intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-            val percent = scale?.let { (level?.times(100))?.div(it) }
+            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: return
+            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            val percent = (level * 100) / scale
 
-            val status= intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val charging = status == BatteryManager.BATTERY_STATUS_CHARGING || status== BatteryManager.BATTERY_STATUS_FULL
-            val deviceName = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
-            phoneBatteryText.text=
-                if(charging)
-                    "Bateria de $deviceName: $percent% (cargando)"
-            else
-                "Bateria de $deviceName: $percent%"
+            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL
+
+            val deviceName =
+                Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
+
+            phoneBatteryText.text =
+                if (charging)
+                    getString(R.string.phone_battery_charging, deviceName, percent)
+                else
+                    getString(R.string.phone_battery, deviceName, percent)
         }
     }
 
@@ -118,36 +111,42 @@ class MainActivity : AppCompatActivity() {
         deviceText = findViewById(R.id.batteryText2)
         phoneBatteryText = findViewById(R.id.batteryText3)
 
-        batteryText.text = "Esperando dispositivo…"
+        batteryText.text = getString(R.string.waiting_device)
         deviceText.text = ""
 
         checkPermissions()
 
         val filter = IntentFilter().apply {
-            addAction(ACTION_ACL_CONNECTED)
-            addAction(ACTION_ACL_DISCONNECTED)
+            addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+            addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
             addAction(ACTION_BATTERY_LEVEL_CHANGED)
         }
-        registerReceiver(bluetoothReceiver, filter)
-        registerReceiver(phoneBatteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
+        registerReceiver(bluetoothReceiver, filter)
+        registerReceiver(
+            phoneBatteryReceiver,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        )
 
         detectConnectedHeadset()
     }
 
-    @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun detectConnectedHeadset() {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+        val bluetoothManager =
+            getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val adapter = bluetoothManager.adapter ?: return
 
         adapter.getProfileProxy(
             this,
             object : BluetoothProfile.ServiceListener {
 
                 @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    val devices = proxy.connectedDevices
-                    for (device in devices) {
+                override fun onServiceConnected(
+                    profile: Int,
+                    proxy: BluetoothProfile
+                ) {
+                    for (device in proxy.connectedDevices) {
                         if (isHeadset(device)) {
                             connectedDevice = device
                             loadSavedBattery()
@@ -163,40 +162,37 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    @SuppressLint("SetTextI18n")
     private fun loadSavedBattery() {
         val device = connectedDevice ?: run {
-            batteryText.text = "Esperando dispositivo…"
+            batteryText.text = getString(R.string.waiting_device)
             deviceText.text = ""
             return
         }
 
         val saved = BatteryStorage.load(this, device)
         if (saved != -1) {
-            batteryText.text = device.name + " Batería: $saved% (última)"
+            batteryText.text =
+                getString(R.string.last_battery, device.name, saved)
             deviceText.text = device.name
         } else {
-            batteryText.text = "Conectado (esperando batería)"
+            batteryText.text = getString(R.string.connected_waiting_battery)
             deviceText.text = device.name
         }
     }
 
-
     private fun checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-                    100
-                )
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                100
+            )
         }
     }
 
@@ -213,7 +209,7 @@ class MainActivity : AppCompatActivity() {
         ) {
             detectConnectedHeadset()
         } else {
-            batteryText.text = "Error: sin permisos"
+            batteryText.text = getString(R.string.permission_error)
         }
     }
 
@@ -224,7 +220,6 @@ class MainActivity : AppCompatActivity() {
             unregisterReceiver(phoneBatteryReceiver)
         } catch (_: Exception) {}
     }
-
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun isHeadset(device: BluetoothDevice): Boolean {
