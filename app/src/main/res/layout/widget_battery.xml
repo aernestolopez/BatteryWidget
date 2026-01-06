@@ -1,25 +1,36 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:background="@android:color/black"
-    android:gravity="center">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="160dp"
+    android:layout_height="140dp"
+    android:background="@drawable/widget_bg"
+    android:padding="12dp">
 
-    <TextView
-        android:id="@+id/widgetHeadsetText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🎧 --%"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
-        android:layout_marginEnd="16dp"/>
 
-    <TextView
-        android:id="@+id/widgetPhoneText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="📱 --%"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"/>
-</LinearLayout>
+<TextView
+android:id="@+id/widgetCharge"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text=""
+android:textSize="14sp"
+android:textColor="#66FFFFFF"
+android:layout_gravity="start|center_vertical"
+    android:layout_marginStart="12dp"/>
+
+
+<ImageView
+android:id="@+id/widgetArc"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:scaleType="fitCenter"/>
+
+
+<TextView
+android:id="@+id/widgetCenterText"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="--%"
+android:textColor="@android:color/white"
+android:textSize="18sp"
+android:layout_gravity="end|center_vertical"
+    android:layout_marginEnd="12dp"/>
+
+    </FrameLayout>

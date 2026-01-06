@@ -34,27 +34,54 @@ class BatteryWidgetProvider: AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             widgetId: Int
-        ){
-            val views= RemoteViews(context.packageName, R.layout.widget_battery)
+        ) {
+            val views = RemoteViews(context.packageName, R.layout.widget_battery)
 
             val headsetBattery = BatteryStorage.loadLastHeadsetBattery(context)
-            val phoneBattery= BatteryStorage.loadPhoneBattery(context)
+            val connected = BatteryStorage.isHeadsetConnected(context)
+
+            val phoneBattery = BatteryStorage.loadPhoneBattery(context)
             val charging = BatteryStorage.isPhoneCharging(context)
 
-            views.setTextViewText(
-                R.id.widgetHeadsetText,
-                if(headsetBattery!= -1)"🎧 $headsetBattery%" else "🎧 --%"
+            val percentText =
+                if (headsetBattery != -1 && connected) "$headsetBattery%"
+                else "--%"
+
+            val arcBitmap = ArcBitmapGenerator.createDoubleArcBitmap(
+                phonePercent = phoneBattery,
+                headsetPercent = headsetBattery,
+                phoneCharging = charging,
+                headsetConnected = connected,
+                size = 256
             )
-            views.setTextViewText(
-                R.id.widgetPhoneText,
-                if (charging)
-                    "📱 ${phoneBattery}% ⚡"
+
+            views.setImageViewBitmap(R.id.widgetArc, arcBitmap)
+
+// Texto central → cascos si existen, si no móvil
+            val centerText =
+                when {
+                    connected && headsetBattery != -1 -> "$headsetBattery%"
+                    else -> "--%"
+                }
+
+            views.setTextViewText(R.id.widgetCenterText, centerText)
+
+// Icono ⚡
+            val phoneBatteryText=
+                if(phoneBattery != -1)
+                    if(charging)
+                        "$phoneBattery% ⚡"
+                    else
+                        "$phoneBattery%"
                 else
-                    "📱 ${phoneBattery}%"
+                    "--%"
+
+            views.setTextViewText(
+                R.id.widgetCharge,
+                phoneBatteryText
             )
 
             appWidgetManager.updateAppWidget(widgetId, views)
-
         }
     }
 }

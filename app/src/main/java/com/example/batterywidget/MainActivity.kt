@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_BATTERY_LEVEL =
             "android.bluetooth.device.extra.BATTERY_LEVEL"
     }
-    
+
     private val bluetoothReceiver = object : BroadcastReceiver() {
 
         @SuppressLint("SetTextI18n")
