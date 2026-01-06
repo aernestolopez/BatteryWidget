@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@android:color/black"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/widgetHeadsetText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🎧 --%"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:layout_marginEnd="16dp"/>
+
+    <TextView
+        android:id="@+id/widgetPhoneText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📱 --%"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+</LinearLayout>
