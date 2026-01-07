@@ -21,6 +21,7 @@ class BatteryWidgetProvider: AppWidgetProvider() {
     companion object{
 
         fun updateAllWidgets(context: Context) {
+            android.util.Log.d("DEBUG_BT", "Recibido: se recibe")
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(
                 ComponentName(context, BatteryWidgetProvider::class.java)

@@ -28,14 +28,14 @@ object BatteryStorage {
         prefs.edit {
             putInt(KEY_HEADSET_BATTERY + device.address, level)
             putString(KEY_LAST_HEADSET, device.address)
-            putBoolean(KEY_HEADSET_CONNECTED, true)
+            putBoolean(KEY_HEADSET_CONNECTED, true).commit()
         }
     }
 
     fun setHeadsetConnected(context: Context, connected: Boolean) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs.edit {
-            putBoolean(KEY_HEADSET_CONNECTED, connected)
+            putBoolean(KEY_HEADSET_CONNECTED, connected).commit()
         }
     }
 

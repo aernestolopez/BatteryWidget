@@ -31,65 +31,6 @@ class MainActivity : AppCompatActivity() {
             "android.bluetooth.device.extra.BATTERY_LEVEL"
     }
 
-    private val bluetoothReceiver = object : BroadcastReceiver() {
-
-        @SuppressLint("SetTextI18n")
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-        override fun onReceive(context: Context?, intent: Intent?) {
-
-            val device: BluetoothDevice? =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    intent?.getParcelableExtra(
-                        BluetoothDevice.EXTRA_DEVICE,
-                        BluetoothDevice::class.java
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                }
-
-            when (intent?.action) {
-
-                BluetoothDevice.ACTION_ACL_CONNECTED -> {
-                    if (device != null && isHeadset(device)) {
-                        connectedDevice = device
-                        BatteryStorage.setHeadsetConnected(this@MainActivity, true)
-                        loadSavedBattery()
-                        BatteryWidgetProvider.updateAllWidgets(this@MainActivity)
-                    }
-                }
-
-                ACTION_BATTERY_LEVEL_CHANGED -> {
-                    val level = intent.getIntExtra(EXTRA_BATTERY_LEVEL, -1)
-                    if (device != null && device == connectedDevice && level != -1) {
-
-                        BatteryStorage.saveHeadsetBattery(
-                            this@MainActivity,
-                            device,
-                            level
-                        )
-
-                        batteryText.text = "Batería: $level%"
-                        deviceText.text = device.name
-
-                        BatteryWidgetProvider.updateAllWidgets(this@MainActivity)
-
-                    }
-                }
-
-                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
-                    if (device != null && device == connectedDevice) {
-                        connectedDevice = null
-                        BatteryStorage.setHeadsetConnected(this@MainActivity, false)
-                        batteryText.text = "Cascos desconectados"
-                        deviceText.text = ""
-                        BatteryWidgetProvider.updateAllWidgets(this@MainActivity)
-                    }
-                }
-            }
-        }
-    }
-
 
     private val phoneBatteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -116,6 +57,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val uiUpdateReceiver=object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            actualizarPantalla()
+        }
+
+
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        actualizarPantalla()
+        registerReceiver(uiUpdateReceiver, IntentFilter("ACTUALIZAR_INTERFAZ_APP"), RECEIVER_EXPORTED)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(uiUpdateReceiver)
+    }
+    private fun actualizarPantalla() {
+        val level= BatteryStorage.loadLastHeadsetBattery(this)
+        val connected= BatteryStorage.isHeadsetConnected(this)
+
+        if(connected && level!=-1){
+            batteryText.text = "Batería: $level%"
+        }else{
+            batteryText.text = "Cascos desconectados"
+        }
+    }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,15 +99,6 @@ class MainActivity : AppCompatActivity() {
         batteryText.text = "Esperando dispositivo…"
 
         checkPermissions()
-
-        registerReceiver(
-            bluetoothReceiver,
-            IntentFilter().apply {
-                addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-                addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-                addAction(ACTION_BATTERY_LEVEL_CHANGED)
-            }
-        )
 
         registerReceiver(
             phoneBatteryReceiver,
@@ -203,7 +165,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            unregisterReceiver(bluetoothReceiver)
             unregisterReceiver(phoneBatteryReceiver)
         } catch (_: Exception) {}
     }
