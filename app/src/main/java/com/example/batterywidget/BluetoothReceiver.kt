@@ -13,7 +13,6 @@ class BluetoothReceiver : BroadcastReceiver() {
             "android.bluetooth.device.extra.BATTERY_LEVEL"
         }
     override fun onReceive(context: Context, intent: Intent?) {
-        android.util.Log.d("DEBUG_BT", "Recibido: ${intent?.action}")
         val device: BluetoothDevice? = if(android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.TIRAMISU){
             intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
         }else{
@@ -22,13 +21,11 @@ class BluetoothReceiver : BroadcastReceiver() {
         }
         when(intent?.action){
             BluetoothDevice.ACTION_ACL_CONNECTED->{
-                android.util.Log.d("DEBUG_BT", "Recibidoaaaaaaaaaaaaaaa: ${intent?.action}")
                 BatteryStorage.setHeadsetConnected(context,true)
                 BatteryWidgetProvider.updateAllWidgets(context)
             }
 
             BluetoothDevice.ACTION_ACL_DISCONNECTED->{
-                android.util.Log.d("DEBUG_BT", "Recibidoooooooooooo: ${intent.action}")
                 BatteryStorage.setHeadsetConnected(context,false)
                 BatteryWidgetProvider.updateAllWidgets(context)
             }
@@ -42,7 +39,7 @@ class BluetoothReceiver : BroadcastReceiver() {
             }
         }
 
-        val updateIntent= Intent("ACTUALIZAR_INTERFAZ_APP")
+        val updateIntent= Intent("REFRESH_UI_APP")
         context.sendBroadcast(updateIntent)
     }
 

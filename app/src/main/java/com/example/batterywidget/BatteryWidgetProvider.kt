@@ -4,6 +4,9 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.widget.RemoteViews
 
 
@@ -19,6 +22,18 @@ class BatteryWidgetProvider: AppWidgetProvider() {
     }
 
     companion object{
+
+        fun readPhoneBattery(context: Context): Pair<Int, Boolean>{
+            val bm =context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+            val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+
+            val status= intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)?:-1
+
+            val charging=
+                status== BatteryManager.BATTERY_STATUS_CHARGING || status== BatteryManager.BATTERY_STATUS_FULL
+            return Pair(level, charging)
+        }
 
         fun updateAllWidgets(context: Context) {
             android.util.Log.d("DEBUG_BT", "Recibido: se recibe")
@@ -37,12 +52,12 @@ class BatteryWidgetProvider: AppWidgetProvider() {
             widgetId: Int
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_battery)
+            val (phoneBattery, charging)= readPhoneBattery(context)
+            BatteryStorage.savePhoneBattery(context, phoneBattery)
+            BatteryStorage.savePhoneCharging(context, charging)
 
             val headsetBattery = BatteryStorage.loadLastHeadsetBattery(context)
             val connected = BatteryStorage.isHeadsetConnected(context)
-
-            val phoneBattery = BatteryStorage.loadPhoneBattery(context)
-            val charging = BatteryStorage.isPhoneCharging(context)
 
             val percentText =
                 if (headsetBattery != -1 && connected) "$headsetBattery%"

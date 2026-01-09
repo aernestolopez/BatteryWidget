@@ -1,20 +1,19 @@
 package com.example.batterywidget
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,59 +23,23 @@ class MainActivity : AppCompatActivity() {
 
     private var connectedDevice: BluetoothDevice? = null
 
-    companion object {
-        const val ACTION_BATTERY_LEVEL_CHANGED =
-            "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
-        const val EXTRA_BATTERY_LEVEL =
-            "android.bluetooth.device.extra.BATTERY_LEVEL"
-    }
-
-
-    private val phoneBatteryReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-
-            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: return
-            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-            val percent = (level * 100) / scale
-
-            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val charging =
-                status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL
-
-            BatteryStorage.savePhoneBattery(this@MainActivity, percent)
-            BatteryStorage.savePhoneCharging(this@MainActivity, charging)
-
-            phoneBatteryText.text =
-                if (charging)
-                    "Batería móvil: $percent% ⚡"
-                else
-                    "Batería móvil: $percent%"
-
-            BatteryWidgetProvider.updateAllWidgets(this@MainActivity)
-        }
-    }
-
     private val uiUpdateReceiver=object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            actualizarPantalla()
+            refreshUi()
         }
-
-
-
     }
 
     override fun onResume() {
         super.onResume()
-        actualizarPantalla()
-        registerReceiver(uiUpdateReceiver, IntentFilter("ACTUALIZAR_INTERFAZ_APP"), RECEIVER_EXPORTED)
+        refreshUi()
+        registerReceiver(uiUpdateReceiver, IntentFilter("REFRESH_UI_APP"), RECEIVER_EXPORTED)
     }
 
     override fun onPause() {
         super.onPause()
         unregisterReceiver(uiUpdateReceiver)
     }
-    private fun actualizarPantalla() {
+    private fun refreshUi() {
         val level= BatteryStorage.loadLastHeadsetBattery(this)
         val connected= BatteryStorage.isHeadsetConnected(this)
 
@@ -100,14 +63,30 @@ class MainActivity : AppCompatActivity() {
 
         checkPermissions()
 
-        registerReceiver(
-            phoneBatteryReceiver,
-            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+        }
+        val serviceIntent = Intent(this, BatteryMonitorService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
 
-        detectConnectedHeadset()
+        if (hasPermits()) {
+            detectConnectedHeadset()
+        }
     }
 
+    private fun hasPermits(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            detectConnectedHeadset()
+        }
+    }
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun detectConnectedHeadset() {
         val manager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -164,9 +143,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            unregisterReceiver(phoneBatteryReceiver)
-        } catch (_: Exception) {}
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
