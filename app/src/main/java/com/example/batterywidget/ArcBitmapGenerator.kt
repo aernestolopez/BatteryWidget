@@ -7,92 +7,46 @@ import android.graphics.RectF
 
 object ArcBitmapGenerator {
 
-    fun createDoubleArcBitmap(
-        phonePercent: Int,
-        headsetPercent: Int,
-        phoneCharging: Boolean,
-        headsetConnected: Boolean,
+    fun createSingleArcBitmap(
+        percent: Int,
+        charging: Boolean,
+        enabled: Boolean,
         size: Int
     ): Bitmap {
-
-        // Hacemos que el tamaño del bitmap sea más grande para acomodar ambos arcos.
-        val bitmapWidth = size * 2 // Doble del tamaño original para separar los arcos
-        val bitmap = Bitmap.createBitmap(bitmapWidth, size, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        // ===== Medidas =====
-        val outerStroke = size * 0.10f
-        val innerStroke = size * 0.08f
-        val gap = size * 0.04f
+        val stroke = size * 0.12f
+        val padding = size * 0.10f
+        val rect = RectF(padding, padding, size - padding, size - padding)
 
-        // ===== Rectángulos de los arcos =====
-
-        val outerRect = RectF(
-            outerStroke,
-            outerStroke,
-            bitmapWidth / 2f - outerStroke,
-            size - outerStroke
-        )
-
-
-        val innerRect = RectF(
-            bitmapWidth / 2f + gap,
-            outerStroke + gap,
-            bitmapWidth - outerStroke,
-            size - outerStroke - gap
-        )
-
-
-        val basePaintOuter = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val basePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
-            strokeWidth = outerStroke
-            color = 0x33FFFFFF
+            strokeWidth = stroke
+            strokeCap = Paint.Cap.ROUND
+            color = 0x22FFFFFF 
         }
 
-        val basePaintInner = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
-            strokeWidth = innerStroke
-            color = 0x22FFFFFF
-        }
-
-        val phonePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = outerStroke
+            strokeWidth = stroke
             strokeCap = Paint.Cap.ROUND
             color = when {
-                phoneCharging -> 0xFF4CAF50.toInt() // verde
-                phonePercent <= 20 -> 0xFFFF5252.toInt() // rojo
-                else -> 0xFFFFFFFF.toInt()
+                !enabled -> 0x44FFFFFF
+                percent <= 20 && !charging -> 0xFFFF5252.toInt()
+                else -> 0xFF2DDA73.toInt()
             }
         }
 
-        val headsetPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = innerStroke
-            strokeCap = Paint.Cap.ROUND
-            color = if (headsetConnected)
-                0xFFFFFFFF.toInt()
-            else
-                0x55FFFFFF
-        }
+        // Arco más abierto (estilo referencia): de 170 grados a 370 (barrido de 200)
+        val startAngle = 170f
+        val sweepAngle = 200f
 
+        canvas.drawArc(rect, startAngle, sweepAngle, false, basePaint)
 
-        // Dibuja el arco exterior (de teléfono) en la mitad izquierda
-        canvas.drawArc(outerRect, 180f, 180f, false, basePaintOuter)
-
-        // Dibuja el arco interior (de cascos) en la mitad derecha
-        canvas.drawArc(innerRect, 180f, 180f, false, basePaintInner)
-
-
-        if (phonePercent >= 0) {
-            val sweep = 180f * phonePercent / 100f
-            canvas.drawArc(outerRect, 180f, sweep, false, phonePaint)
-        }
-
-
-        if (headsetConnected && headsetPercent >= 0) {
-            val sweep = 180f * headsetPercent / 100f
-            canvas.drawArc(innerRect, 180f, sweep, false, headsetPaint)
+        if (percent >= 0 && enabled) {
+            val progressSweep = sweepAngle * (percent / 100f)
+            canvas.drawArc(rect, startAngle, progressSweep, false, progressPaint)
         }
 
         return bitmap

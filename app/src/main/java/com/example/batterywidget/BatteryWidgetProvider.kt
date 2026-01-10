@@ -9,93 +9,94 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.widget.RemoteViews
 
+class BatteryWidgetProvider : AppWidgetProvider() {
 
-class BatteryWidgetProvider: AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for(widgetId in appWidgetIds){
-            updateWidget(context, appWidgetManager, widgetId)
+        appWidgetIds.forEach {
+            updateWidget(context, appWidgetManager, it)
         }
     }
 
-    companion object{
+    companion object {
 
-        fun readPhoneBattery(context: Context): Pair<Int, Boolean>{
-            val bm =context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        fun readPhoneBattery(context: Context): Pair<Int, Boolean> {
+            val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
             val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-            val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
-            val status= intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)?:-1
+            val intent = context.registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
 
-            val charging=
-                status== BatteryManager.BATTERY_STATUS_CHARGING || status== BatteryManager.BATTERY_STATUS_FULL
+            val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+            val charging =
+                status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL
+
             return Pair(level, charging)
         }
 
         fun updateAllWidgets(context: Context) {
-            android.util.Log.d("DEBUG_BT", "Recibido: se recibe")
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(
                 ComponentName(context, BatteryWidgetProvider::class.java)
             )
-
-            for (id in ids) {
-                updateWidget(context, manager, id)
-            }
+            ids.forEach { updateWidget(context, manager, it) }
         }
+
         fun updateWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             widgetId: Int
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_battery)
-            val (phoneBattery, charging)= readPhoneBattery(context)
+
+            // Usamos un tamaño de 200px para el bitmap para que tenga buena calidad
+            val bitmapSize = 200
+
+            // ===== MÓVIL =====
+            val (phoneBattery, charging) = readPhoneBattery(context)
+
             BatteryStorage.savePhoneBattery(context, phoneBattery)
             BatteryStorage.savePhoneCharging(context, charging)
 
+            val phoneArc = ArcBitmapGenerator.createSingleArcBitmap(
+                percent = phoneBattery,
+                charging = charging,
+                enabled = true,
+                size = bitmapSize
+            )
+
+            views.setImageViewBitmap(R.id.widgetArcPhone, phoneArc)
+
+            val phoneText = if (phoneBattery != -1) {
+                if (charging) "$phoneBattery⚡" else "$phoneBattery"
+            } else "--"
+            
+            views.setTextViewText(R.id.widgetPhoneText, phoneText)
+
+            // ===== CASCOS =====
             val headsetBattery = BatteryStorage.loadLastHeadsetBattery(context)
             val connected = BatteryStorage.isHeadsetConnected(context)
 
-            val percentText =
-                if (headsetBattery != -1 && connected) "$headsetBattery%"
-                else "--%"
-
-            val arcBitmap = ArcBitmapGenerator.createDoubleArcBitmap(
-                phonePercent = phoneBattery,
-                headsetPercent = headsetBattery,
-                phoneCharging = charging,
-                headsetConnected = connected,
-                size = 256
+            val headsetArc = ArcBitmapGenerator.createSingleArcBitmap(
+                percent = if (connected) headsetBattery else 0,
+                charging = false,
+                enabled = connected,
+                size = bitmapSize
             )
 
-            views.setImageViewBitmap(R.id.widgetArc, arcBitmap)
+            views.setImageViewBitmap(R.id.widgetArcHeadset, headsetArc)
 
-// Texto central → cascos si existen, si no móvil
-            val centerText =
-                when {
-                    connected && headsetBattery != -1 -> "$headsetBattery%"
-                    else -> "--%"
-                }
+            val headsetText = if (connected && headsetBattery != -1) {
+                "$headsetBattery"
+            } else "--"
 
-            views.setTextViewText(R.id.widgetCenterText, centerText)
-
-// Icono ⚡
-            val phoneBatteryText=
-                if(phoneBattery != -1)
-                    if(charging)
-                        "$phoneBattery% ⚡"
-                    else
-                        "$phoneBattery%"
-                else
-                    "--%"
-
-            views.setTextViewText(
-                R.id.widgetCharge,
-                phoneBatteryText
-            )
+            views.setTextViewText(R.id.widgetHeadsetText, headsetText)
 
             appWidgetManager.updateAppWidget(widgetId, views)
         }
