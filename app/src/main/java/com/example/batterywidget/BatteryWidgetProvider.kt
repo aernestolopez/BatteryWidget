@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.view.View
 import android.widget.RemoteViews
 
 class BatteryWidgetProvider : AppWidgetProvider() {
@@ -74,8 +75,14 @@ class BatteryWidgetProvider : AppWidgetProvider() {
             views.setImageViewBitmap(R.id.widgetArcPhone, phoneArc)
 
             val phoneText = if (phoneBattery != -1) {
-                if (charging) "$phoneBattery⚡" else "$phoneBattery"
+                 "$phoneBattery"
             } else "--"
+
+             if(charging){
+                views.setViewVisibility(R.id.widgetChargingIcon, View.VISIBLE)
+            }else{
+                 views.setViewVisibility(R.id.widgetChargingIcon, View.GONE)
+            }
             
             views.setTextViewText(R.id.widgetPhoneText, phoneText)
 

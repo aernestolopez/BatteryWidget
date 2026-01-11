@@ -24,7 +24,7 @@ object ArcBitmapGenerator {
             style = Paint.Style.STROKE
             strokeWidth = stroke
             strokeCap = Paint.Cap.ROUND
-            color = 0x22FFFFFF 
+            color = 0x22FFFFFF
         }
 
         val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -32,9 +32,10 @@ object ArcBitmapGenerator {
             strokeWidth = stroke
             strokeCap = Paint.Cap.ROUND
             color = when {
-                !enabled -> 0x44FFFFFF
-                percent <= 20 && !charging -> 0xFFFF5252.toInt()
-                else -> 0xFF2DDA73.toInt()
+                !enabled -> 0x44FFFFFF          // 1. Gris transparente si está deshabilitado
+                charging -> 0xFF2DDA73.toInt()  // 2. VERDE si está cargando (prioritario)
+                percent <= 20 -> 0xFFFF5252.toInt() // 3. ROJO si no carga Y es <= 20%
+                else -> 0xFFFFFFFF.toInt()      // 4. BLANCO por defecto (> 20% y no carga)
             }
         }
 
