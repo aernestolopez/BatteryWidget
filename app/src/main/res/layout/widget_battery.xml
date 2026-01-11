@@ -1,36 +1,93 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="160dp"
-    android:layout_height="140dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:background="@drawable/widget_bg"
-    android:padding="12dp">
+    android:orientation="horizontal"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="6dp">
 
+    <!-- PHONE ITEM -->
+    <RelativeLayout
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="6dp">
 
-<TextView
-android:id="@+id/widgetCharge"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text=""
-android:textSize="14sp"
-android:textColor="#66FFFFFF"
-android:layout_gravity="start|center_vertical"
-    android:layout_marginStart="12dp"/>
+        <ImageView
+            android:id="@+id/widgetArcPhone"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_centerHorizontal="true" />
 
+        <ImageView
+            android:id="@+id/widgetIconPhone"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/carbonmobile"
+            android:tint="#FFFFFF" />
 
-<ImageView
-android:id="@+id/widgetArc"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:scaleType="fitCenter"/>
+        <TextView
+            android:id="@+id/widgetPhoneText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/widgetIconPhone"
 
+            android:layout_marginTop="-2dp"
+            android:gravity="center_horizontal"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:text="100"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-<TextView
-android:id="@+id/widgetCenterText"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="--%"
-android:textColor="@android:color/white"
-android:textSize="18sp"
-android:layout_gravity="end|center_vertical"
-    android:layout_marginEnd="12dp"/>
+        <ImageView
+            android:id="@+id/widgetChargingIcon"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginEnd="13dp"
+            android:layout_marginTop="5dp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignTop="@id/widgetPhoneText"
+            android:layout_alignEnd="@id/widgetPhoneText"
+            android:src="@drawable/carbonlightning"
+            android:tint="#FFFFFF"
+            android:visibility="gone" />
+    </RelativeLayout>
 
-    </FrameLayout>
+    <!-- HEADSET ITEM -->
+    <RelativeLayout
+        android:layout_width="75dp"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/widgetArcHeadset"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_centerHorizontal="true" />
+
+        <ImageView
+            android:id="@+id/widgetIconHeadset"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/carbonheadphones"
+            android:tint="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/widgetHeadsetText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/widgetIconHeadset"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="-2dp"
+            android:text="19"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
+    </RelativeLayout>
+
+</LinearLayout>
