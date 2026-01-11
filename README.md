@@ -1,13 +1,15 @@
 Battery Widget 🔋🎧
 This is a minimalist and functional Android widget, inspired by a random design I saw, created to show the battery status of your phone and connected Bluetooth headphones directly on your home screen.
 
-✨ Main Features
-> The widget offers a clear and quick visualization of essential information:
-> Dual Indicator: Simultaneously displays the battery percentage of the phone (left) and the Bluetooth headphones (right).
-> Intuitive Visual Feedback:
-> Active Charging: When the phone is charging, the main battery arc changes to a vibrant green color, and a ⚡ lightning bolt icon is displayed.
-> Low Battery: If the phone or headphone battery drops below 20%, the corresponding arc changes to red for a quick warning.
-> Minimalist Design: The dark capsule design integrates seamlessly with any dark theme or wallpaper.
+## ✨ Main Features
+
+The widget offers a clear and quick visualization of essential information:
+
+*   **Dual Indicator:** Simultaneously displays the battery percentage of the **phone** (left) and the **Bluetooth headphones** (right).
+*   **Intuitive Visual Feedback:**
+    *   **Active Charging:** When the phone is charging, the arc changes to a **vibrant green** color, and a **⚡ lightning bolt** icon is displayed.
+    *   **Low Battery:** If the battery drops below **20%**, the arc changes to **red** for a quick warning.
+*   **Minimalist Design:** The dark capsule design integrates seamlessly with any dark theme or wallpaper.
 
 💡 Project Motivation
 
