@@ -1,22 +1,3 @@
-<img width="827" height="585" alt="image" src="https://github.com/user-attachments/assets/4986b1f8-02b9-4651-bba4-4e3e73ae72d8" />
-> [!NOTE]  
-> I've created a widget to show the battery of my phone and Bluetooth headphones simply because I saw a widget that did that and my phone didn't have one.
-
-> [!TIP]
-> Optional information to help a user be more successful.
-> <img width="827" height="585" alt="image" src="https://github.com/user-attachments/assets/69a5d31a-bdb2-4a3f-a6ae-7adb4614b019" />
-
-
-> [!IMPORTANT]  
-> Crucial information necessary for users to succeed.
-
-> [!WARNING]  
-> Critical content demanding immediate user attention due to potential risks.
-
-> [!CAUTION]
-> Negative potential consequences of an action.
-
-
 Battery Widget 🔋🎧
 This is a minimalist and functional Android widget, inspired by a random design I saw, created to show the battery status of your phone and connected Bluetooth headphones directly on your home screen.
 
