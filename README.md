@@ -10,12 +10,17 @@ This is a minimalist and functional Android widget, inspired by a random design 
 > Minimalist Design: The dark capsule design integrates seamlessly with any dark theme or wallpaper.
 
 💡 Project Motivation
+
 > [!NOTE]
 > I've created a widget to show the battery of my phone and Bluetooth headphones simply because I saw a similar widget on social media and my Android phone didn't have one by default. Now mine does!
 🛠️ Technical Implementation
 > The widget is implemented using standard Android `AppWidgetProvider` APIs, `BroadcastReceiver` to listen for system battery changes, and a custom Bitmap generator (`ArcBitmapGenerator.kt`) to dynamically draw the progress arcs and color changes.
+
+
 > [!TIP]
 > The design uses a horizontal `LinearLayout` for the main container and two nested vertical LinearLayouts for each device (phone and headphones), allowing for clean organization of icons, arcs, and percentages.
+
+
 🚀 Usage and Installation
 > [!IMPORTANT]
 >This is a source code project. To use it, you must clone the repository, open it in Android Studio, and compile the APK on your device.
