@@ -1,4 +1,5 @@
 Battery Widget 🔋🎧
+
 This is a minimalist and functional Android widget, inspired by a random design I saw, created to show the battery status of your phone and connected Bluetooth headphones directly on your home screen.
 
 ## ✨ Main Features
