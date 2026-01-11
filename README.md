@@ -1,4 +1,5 @@
-<img width="827" height="585" alt="image" src="https://github.com/user-attachments/assets/4986b1f8-02b9-4651-bba4-4e3e73ae72d8" />> [!NOTE]  
+<img width="827" height="585" alt="image" src="https://github.com/user-attachments/assets/4986b1f8-02b9-4651-bba4-4e3e73ae72d8" />
+> [!NOTE]  
 > I've created a widget to show the battery of my phone and Bluetooth headphones simply because I saw a widget that did that and my phone didn't have one.
 
 > [!TIP]
