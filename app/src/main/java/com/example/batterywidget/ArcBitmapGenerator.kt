@@ -11,7 +11,8 @@ object ArcBitmapGenerator {
         percent: Int,
         charging: Boolean,
         enabled: Boolean,
-        size: Int
+        size: Int,
+        powerSaving:Boolean = false
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -34,8 +35,9 @@ object ArcBitmapGenerator {
             color = when {
                 !enabled -> 0x44FFFFFF          // 1. Gris transparente si está deshabilitado
                 charging -> 0xFF2DDA73.toInt()  // 2. VERDE si está cargando (prioritario)
-                percent <= 20 -> 0xFFFF5252.toInt() // 3. ROJO si no carga Y es <= 20%
-                else -> 0xFFFFFFFF.toInt()      // 4. BLANCO por defecto (> 20% y no carga)
+                powerSaving -> 0xFFFF6F00.toInt() //3. Naranja si esta en modo ahorro de bateria
+                percent <= 20 -> 0xFFFF5252.toInt() // 4. ROJO si no carga Y es <= 20%
+                else -> 0xFFFFFFFF.toInt()      // 5. BLANCO por defecto (> 20% y no carga)
             }
         }
 
