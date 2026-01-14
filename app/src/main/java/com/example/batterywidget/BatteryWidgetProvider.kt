@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.PowerManager
 import android.view.View
 import android.widget.RemoteViews
 
@@ -24,21 +25,18 @@ class BatteryWidgetProvider : AppWidgetProvider() {
 
     companion object {
 
-        fun readPhoneBattery(context: Context): Pair<Int, Boolean> {
+        fun readPhoneBattery(context: Context): Triple<Int, Boolean, Boolean> {
             val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
             val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-
-            val intent = context.registerReceiver(
-                null,
-                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            )
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val isPowerSaving = powerManager.isPowerSaveMode
+            val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
             val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-            val charging =
-                status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL
+            val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL
 
-            return Pair(level, charging)
+            return Triple(level, charging, isPowerSaving)
         }
 
         fun updateAllWidgets(context: Context) {
@@ -60,7 +58,7 @@ class BatteryWidgetProvider : AppWidgetProvider() {
             val bitmapSize = 200
 
             // ===== MÓVIL =====
-            val (phoneBattery, charging) = readPhoneBattery(context)
+            val (phoneBattery, charging, powerSaving) = readPhoneBattery(context)
 
             BatteryStorage.savePhoneBattery(context, phoneBattery)
             BatteryStorage.savePhoneCharging(context, charging)
@@ -69,6 +67,7 @@ class BatteryWidgetProvider : AppWidgetProvider() {
                 percent = phoneBattery,
                 charging = charging,
                 enabled = true,
+                powerSaving = powerSaving,
                 size = bitmapSize
             )
 

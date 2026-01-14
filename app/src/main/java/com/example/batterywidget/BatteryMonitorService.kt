@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Build
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 
 class BatteryMonitorService : Service() {
@@ -28,6 +29,7 @@ class BatteryMonitorService : Service() {
             addAction(Intent.ACTION_BATTERY_CHANGED)
             addAction(Intent.ACTION_POWER_CONNECTED)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
+            addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(batteryReceiver, filter, RECEIVER_NOT_EXPORTED)
@@ -50,7 +52,7 @@ class BatteryMonitorService : Service() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setOngoing(true)
-            .setContentTitle("Monitoreo de Bateria")
+            .setContentTitle("Monitoreo de Batería")
             .setContentText("Actualizando Información en tiempo real")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
